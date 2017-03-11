@@ -10,12 +10,11 @@ sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get dist-upgrade
 sudo ppa-purge
-sudo service redis-server restart
 chmod 777 telegram-cli-1222
 chmod 777 anticrash.sh
 chmod 777 tabchi-*.sh
 RED='\033[0;31m'
 NC='\033[0m'
 CYAN='\033[0;36m'
-echo -e "${CYAN}Installation Completed! Create a bot with creator.lua (lua creator.lua)${NC}"
+echo -e "${CYAN}Installation Completed! Create a bot with creator.lua (python3 creator.py)${NC}"
 exit
