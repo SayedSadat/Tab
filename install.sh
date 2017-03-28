@@ -10,6 +10,8 @@ sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get dist-upgrade
 sudo ppa-purge
+sudo apt-get install python3-pip
+pip3 install redis
 chmod 777 telegram-cli-1222
 chmod 777 anticrash.sh
 chmod 777 tabchi-*.sh
