@@ -106,7 +106,7 @@ function process_links(text_)
         if result.is_group_ or result.is_supergroup_channel_ then
           if not redis:get(basehash .. "notjoinlinks") then
             if redis:get(basehash .. "joinlimit") then
-              if result.member_count_ >= redis:get(basehash .. "joinlimit") then
+              if tonumber(result.member_count_) >= redis:get(basehash .. "joinlimit") then
                 tdcli.importChatInviteLink(v)
               end
             else
@@ -123,7 +123,6 @@ function process_links(text_)
         ID = "CheckChatInviteLink",
         invite_link_ = v
       }, check_link, nil)
-      break
     end
   end
 end
@@ -321,18 +320,18 @@ function process_updates(msg)
         }
         function setasfwd(extra, result)
           if result.is_channel_ then
-            tdcli.importChatInviteLink(matches[2]:gsub("t.me", "telegram.me"))
+            tdcli.importChatInviteLink(matches[2])
             redis:sadd(basehash .. "fwdallers", tonumber(result.chat_id_))
             redis:set(basehash .. "fwdallers:" .. result.chat_id_, true)
-            status = "Successfully Set \"" .. result.title_ .. "\" As A Forward Channel"
+            s_tatus = "Successfully Set \"" .. result.title_ .. "\" As A Forward Channel"
           else
-            status = "Result Was Not A Channel"
+            s_tatus = "Result Was Not A Channel"
           end
-          tdcli.sendMessage(msg.chat_id_, msg.id_, 1, status, 1, "html")
+          tdcli.sendMessage(msg.chat_id_, msg.id_, 1, s_tatus, 1, "html")
         end
         tdcli_function({
           ID = "CheckChatInviteLink",
-          invite_link_ = matches[2]:gsub("t.me", "telegram.me")
+          invite_link_ = matches[2]
         }, setasfwd, nil)
         save_log("User " .. msg.sender_user_id_ .. ", Added a Fwd Channel")
       elseif text_:match("^[!/#]fwdchannels$") then
@@ -357,6 +356,37 @@ function process_updates(msg)
         else
           return id .. " Is Not A Forward Channel"
         end
+      elseif text_:match("^[!/#](setpic)$") and msg.reply_to_message_id_ ~= 0 then
+        save_log("User " .. msg.sender_user_id_ .. ", Set A New Profile Pic")
+        function getpic(extra, result)
+          if result.content_.ID == "MessagePhoto" then
+            local photo = result.content_.photo_.sizes_[#result.content_.photo_.sizes_ - 1].photo_
+            if photo.path_ then
+              tdcli_function({
+                ID = "SetProfilePhoto",
+                photo_path_ = photo_path
+              }, dl_cb, nil)
+              st_atus = "Successfully Set New Photo"
+            else
+              tdcli.sendMessage(msg.chat_id_, msg.id_, 1, "Result Will Send You In Few Seconds", 1, "html")
+              tdcli.downloadFile(photo.id_)
+              sleep(5)
+              tdcli_function({
+                ID = "GetMessage",
+                chat_id_ = msg.chat_id_,
+                message_id_ = msg.reply_to_message_id_
+              }, getpic, nil)
+            end
+          else
+            st_atus = "Replied message is not a photo"
+          end
+          tdcli.sendMessage(msg.chat_id_, msg.id_, 1, st_atus, 1, "html")
+        end
+        tdcli_function({
+          ID = "GetMessage",
+          chat_id_ = msg.chat_id_,
+          message_id_ = msg.reply_to_message_id_
+        }, getpic, nil)
       elseif text_:match("^[!/#](import) (.*)$") then
         local matches = {
           text_:match("^[!/#](import) (.*)$")
@@ -375,19 +405,20 @@ function process_updates(msg)
                         for i = 1, #decoded do
                           tdcli.importContacts(decoded[i].phone, decoded[i].first, decoded[i].last, decoded[i].id)
                         end
-                        status = #decoded .. " Contacts Imported..."
+                        sta_tus = #decoded .. " Contacts Imported..."
                       else
-                        status = "File is not OK"
+                        sta_tus = "File is not OK"
                       end
                     else
-                      status = "Somthing is not OK"
+                      sta_tus = "Somthing is not OK"
                     end
                   else
-                    status = "File type is not OK"
+                    sta_tus = "File type is not OK"
                   end
                 else
                   tdcli.downloadFile(result.content_.document_.document_.id_)
-                  status = "Result Will Send You In Few Seconds"
+                  local text = "Result Will Send You In Few Seconds"
+                  tdcli.sendMessage(msg.chat_id_, msg.id_, 1, text, 1, "html")
                   sleep(5)
                   tdcli_function({
                     ID = "GetMessage",
@@ -396,9 +427,9 @@ function process_updates(msg)
                   }, getdoc, nil)
                 end
               else
-                status = "Replied message is not a document"
+                sta_tus = "Replied message is not a document"
               end
-              tdcli.sendMessage(msg.chat_id_, msg.id_, 1, status, 1, "html")
+              tdcli.sendMessage(msg.chat_id_, msg.id_, 1, sta_tus, 1, "html")
             end
             tdcli_function({
               ID = "GetMessage",
@@ -419,19 +450,20 @@ function process_updates(msg)
                           process_links(decoded[i])
                           s = s + 1
                         end
-                        status = "Joined to " .. s .. " Groups"
+                        stat_us = "Joined to " .. s .. " Groups"
                       else
-                        status = "File is not OK"
+                        stat_us = "File is not OK"
                       end
                     else
-                      status = "Somthing is not OK"
+                      stat_us = "Somthing is not OK"
                     end
                   else
-                    status = "File type is not OK"
+                    stat_us = "File type is not OK"
                   end
                 else
                   tdcli.downloadFile(result.content_.document_.document_.id_)
-                  status = "Result Will Send You In Few Seconds"
+                  local text = "Result Will Send You In Few Seconds"
+                  tdcli.sendMessage(msg.chat_id_, msg.id_, 1, text, 1, "html")
                   sleep(5)
                   tdcli_function({
                     ID = "GetMessage",
@@ -440,9 +472,9 @@ function process_updates(msg)
                   }, getlinks, nil)
                 end
               else
-                status = "Replied message is not a document"
+                stat_us = "Replied message is not a document"
               end
-              tdcli.sendMessage(msg.chat_id_, msg.id_, 1, status, 1, "html")
+              tdcli.sendMessage(msg.chat_id_, msg.id_, 1, stat_us, 1, "html")
             end
             tdcli_function({
               ID = "GetMessage",
@@ -492,15 +524,13 @@ function process_updates(msg)
             }, contactlist, nil)
           end
         end
-      elseif text_:match("^[!/#](resetstats)$") then
-        redis:del(basehash .. "groups")
-        redis:del(basehash .. "channels")
-        redis:del(basehash .. "pvis")
-        redis:del(basehash .. "savedlinks")
-        redis:del(basehash .. "fullsudo")
-        redis:del(basehash .. "totalcontacts")
-        save_log("User " .. msg.sender_user_id_ .. ", Reset Stats")
-        return "Stats Reset!"
+      elseif text_:match("^[!/#](resetbot)$") then
+        redis:set("tabchi:bak:" .. tabchi_id .. ":fullsudo", redis:get(basehash .. "fullsudo"))
+        redis:del(basehash .. "*")
+        redis:set(basehash .. "fullsudo", redis:get("tabchi:bak:" .. tabchi_id .. ":fullsudo"))
+        redis:del("tabchi:bak:" .. tabchi_id .. ":fullsudo")
+        save_log("User " .. msg.sender_user_id_ .. ", Reset Bot")
+        return "Bot Reset!"
       else
         local matches = {
           text_:match("^[$](.*)")
@@ -854,7 +884,6 @@ Saved Contacts : ]] .. tostring(contacts)
         query_ = query,
         offset_ = 0
       }, inline, nil) end
-      end
     elseif text_:match("^[!/#](settings)$") then
       local addedmsg = "Off"
       local addedcontact = "Off"
@@ -968,7 +997,43 @@ Typing : ]] .. typing
         redis:set(basehash .. id .. "fromchatid", msg.chat_id_)
         redis:set(basehash .. id .. "ttl", time)
         save_log("User " .. msg.sender_user_id_ .. ", Added a Time Forward")
-        return "I Will Forward This Message Every " .. matches[2] .. " Minutes " .. matches[3] .. " Times"
+        return "I Will Forward This Message Every " .. matches[2] .. " Minutes " .. matches[3] .. [[
+ Times
+Time Forward ID : ]] .. id
+      end
+    elseif text_:match("^[!/#](timefwds)$") then
+      local text = "Time Forward Processes : \n"
+      local all = redis:smembers(basehash .. "timeforwards")
+      for i = 1, #all do
+        text = text .. i .. ". ID : " .. all[i] .. ", Every " .. redis:get(basehash .. all[i] .. "ttl") / 60 .. " Minutes " .. redis:get(basehash .. all[i] .. "times") .. " Times"
+      end
+      save_log("User " .. msg.sender_user_id_ .. ", Requested Time Forwards List")
+      return text
+    elseif text_:match("^[!/#](deltimefwd) (%d+)$") then
+      local matches = {
+        text_:match("^[!/#](deltimefwd) (%d+)$")
+      }
+      if #matches == 2 then
+        redis:srem(basehash .. "timeforwards", matches[2])
+        redis:del(basehash .. matches[2] .. "*")
+        save_log("User " .. msg.sender_user_id_ .. ", Deleted a Time Forward")
+        return "Time Forward Deleted!"
+      end
+    elseif text_:match("^[!/#](sendtimefwd) (%d+)$") then
+      local matches = {
+        text_:match("^[!/#](sendtimefwd) (%d+)$")
+      }
+      if #matches == 2 and redis:get(basehash .. matches[2] .. "fromchatid") then
+        tdcli_function({
+          ID = "ForwardMessages",
+          chat_id_ = msg.chat_id_,
+          from_chat_id_ = redis:get(basehash .. matches[2] .. "fromchatid"),
+          message_ids_ = {
+            [0] = tonumber(matches[2])
+          },
+          disable_notification_ = 0,
+          from_background_ = 1
+        }, dl_cb, nil)
       end
     elseif text_:match("^[!/#](fwd) (.*)$") then
       local matches = {
@@ -1044,6 +1109,7 @@ Typing : ]] .. typing
       return "Sent!"
     end
   end
+end
 function update(data, tabchi_id)
   basehash = "tabchi:" .. tabchi_id .. ":"
   if data.ID == "UpdateNewMessage" then
